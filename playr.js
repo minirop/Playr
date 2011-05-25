@@ -338,10 +338,15 @@ function Playr(v_id, v_el){
 			var that = this;
 			var curTrack = that.track_tags[track];
 			var req_track = new XMLHttpRequest();
+			var is_ass = /\.(ssa|ass)$/i;
 			req_track.open('GET', curTrack.getAttribute('src'));
 			req_track.onreadystatechange = function(){
 				if(req_track.readyState == 4 && (req_track.status == 200 || req_track.status == 0)){
-					that.subs.push(that.parseTrack(req_track.responseText, 'subtitles'));
+					if(is_ass.exec(curTrack.getAttribute('src')))
+						that.subs.push(that.parseAssTrack(req_track.responseText, 'subtitles'));
+					else
+						that.subs.push(that.parseTrack(req_track.responseText, 'subtitles'));
+					
 					if(req_track.responseText != ''){
 						var label = curTrack.getAttribute('label');
 						var lang = curTrack.getAttribute('srclang');
@@ -448,6 +453,70 @@ function Playr(v_id, v_el){
   			}
 			return entries;
 		};
+		
+		/**
+		 * Parse SubStation Alpha subtitles
+		 * @param {String} track_content The content of the file
+		 * @param {String} track_kind 'subtitles', 'captions'... 
+		 * @return An array of cues' objects
+		 */
+		Playr.prototype.parseAssTrack = function(track_content, track_kind){
+			var lines = track_content.split(/\r?\n/);
+			var entries = new Array();
+			// for now, only get the text
+			while(lines.length > 0 && lines[0] != '[Events]')
+				lines.shift();
+			lines.shift(); // remove the [Events] line.
+			
+			// get the order and name of the "values"
+			var format = lines[0];
+			lines.shift();
+			if(format.indexOf('Format:') != 0)
+				return;
+			
+			format.substr(7);
+			var types = format.split(',');
+			var startIndex = -1;
+			var endIndex = -1;
+			var textIndex = -1;
+			for(var i = 0;i < types.length;i++)
+			{
+				types[i] = types[i].replace(/^\s+/g,'').replace(/\s+$/g,''); // trim
+				if(types[i] == 'Start')
+					startIndex = i;
+				if(types[i] == 'End')
+					endIndex = i;
+				if(types[i] == 'Text')
+					textIndex = i;
+			}
+			if(startIndex < 0 && endIndex < 0 && textIndex < 0)
+				return;
+			
+			while(lines.length > 0 && lines[0].indexOf('Dialogue:') == 0)
+			{
+				var currentLine = lines[0];
+				currentLine.substr(9);
+				var values = currentLine.split(',');
+				var beginTime = values[startIndex].replace('.', ',');
+				var endTime = values[endIndex].replace('.', ',');
+				var lineOfText = values[textIndex];
+				for(var k = textIndex + 1;k < values.length;k++)
+					lineOfText += ',' + values[k];
+				lineOfText = lineOfText.replace('\\N', "\n");
+				lineOfText = lineOfText.replace(/\{[^}]*\}/, '');
+				
+				entries.push({
+					'start': this.tc2sec(beginTime),
+					'stop': this.tc2sec(endTime),
+					'text': lineOfText,
+					'settings': ''
+				});
+				
+				lines.shift();
+			}
+			
+			return entries;
+		}
 		
 		/**
 		 * Display the captions on the video (called on timeupdate)
