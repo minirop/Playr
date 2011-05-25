@@ -492,25 +492,28 @@ function Playr(v_id, v_el){
 			if(startIndex < 0 && endIndex < 0 && textIndex < 0)
 				return;
 			
-			while(lines.length > 0 && lines[0].indexOf('Dialogue:') == 0)
+			while(lines.length > 0 && lines[0][0] != '[')
 			{
 				var currentLine = lines[0];
-				currentLine.substr(9);
-				var values = currentLine.split(',');
-				var beginTime = values[startIndex].replace('.', ',');
-				var endTime = values[endIndex].replace('.', ',');
-				var lineOfText = values[textIndex];
-				for(var k = textIndex + 1;k < values.length;k++)
-					lineOfText += ',' + values[k];
-				lineOfText = lineOfText.replace('\\N', "\n");
-				lineOfText = lineOfText.replace(/\{[^}]*\}/, '');
-				
-				entries.push({
-					'start': this.tc2sec(beginTime),
-					'stop': this.tc2sec(endTime),
-					'text': lineOfText,
-					'settings': ''
-				});
+				if(currentLine.indexOf('Dialogue:') == 0)
+				{
+					currentLine.substr(9);
+					var values = currentLine.split(',');
+					var beginTime = values[startIndex].replace('.', ',');
+					var endTime = values[endIndex].replace('.', ',');
+					var lineOfText = values[textIndex];
+					for(var k = textIndex + 1;k < values.length;k++)
+						lineOfText += ',' + values[k];
+					lineOfText = lineOfText.replace('\\N', "\n");
+					lineOfText = lineOfText.replace(/\{[^}]*\}/, '');
+					
+					entries.push({
+						'start': this.tc2sec(beginTime),
+						'stop': this.tc2sec(endTime),
+						'text': lineOfText,
+						'settings': ''
+					});
+				}
 				
 				lines.shift();
 			}
