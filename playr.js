@@ -534,10 +534,10 @@ function Playr(v_id, v_el){
 			
 			var fragments = text.split('{');
 			var reconstructedString = fragments[0];
-			for(var i = 1;i < fragments.length;i++)
+			for(var i = 1;i < fragments.length;i++) // the first one (idx 0) is always empty
 			{
 				var extractText = fragments[i].split('}');
-				var styles = extractText[1].split('\\');
+				var styles = extractText[0].split('\\');
 				
 				for(var k = 1;k < styles.length;k++)
 				{
@@ -555,15 +555,47 @@ function Playr(v_id, v_el){
 							bold = false;
 						}
 					}
+					else if(italicRG.test(styles[k]))
+					{
+						var entries = italicRG.exec(styles[k]);
+						if(entries[1] == '1' && italic == false)
+						{
+							reconstructedString += '<i>';
+							italic = true;
+						}
+						else if(entries[1] == '0' && italic == true)
+						{
+							reconstructedString += '</i>';
+							italic = false;
+						}
+					}
+					else if(underlineRG.test(styles[k]))
+					{
+						var entries = underlineRG.exec(styles[k]);
+						if(entries[1] == '1' && underline == false)
+						{
+							reconstructedString += '<u>';
+							underline = true;
+						}
+						else if(entries[1] == '0' && underline == true)
+						{
+							reconstructedString += '</u>';
+							underline = false;
+						}
+					}
 				}
 				
 				reconstructedString += extractText[1];
-				
-				if(bold == true)
-					reconstructedString += '</b>';
 			}
 			
-			var returnValue = new Array(text, '');
+			if(bold == true)
+				reconstructedString += '</b>';
+			if(italic == true)
+				reconstructedString += '</i>';
+			if(underline == true)
+				reconstructedString += '</u>';
+			
+			var returnValue = new Array(reconstructedString, '');
 			return returnValue;
 		}
 		
