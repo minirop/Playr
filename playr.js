@@ -505,13 +505,13 @@ function Playr(v_id, v_el){
 					for(var k = textIndex + 1;k < values.length;k++)
 						lineOfText += ',' + values[k];
 					lineOfText = lineOfText.replace('\\N', "\n");
-					lineOfText = lineOfText.replace(/\{[^}]*\}/, '');
+					var textAndSettings = this.parseOverrideStyle(lineOfText);
 					
 					entries.push({
 						'start': this.tc2sec(beginTime),
 						'stop': this.tc2sec(endTime),
-						'text': lineOfText,
-						'settings': ''
+						'text': textAndSettings[0],
+						'settings': textAndSettings[1]
 					});
 				}
 				
@@ -519,6 +519,52 @@ function Playr(v_id, v_el){
 			}
 			
 			return entries;
+		}
+		
+		/**
+		 * Compile SSA style into WebVTT
+		 */
+		Playr.prototype.parseOverrideStyle = function(text){
+			var bold = false; // \b<0/1>
+			var italic = false; // \i<0/1>
+			var underline = false; // \u<0/1>
+			var boldRG = /^b([01])$/;
+			var italicRG = /^i([01])$/;
+			var underlineRG = /^u([01])$/;
+			
+			var fragments = text.split('{');
+			var reconstructedString = fragments[0];
+			for(var i = 1;i < fragments.length;i++)
+			{
+				var extractText = fragments[i].split('}');
+				var styles = extractText[1].split('\\');
+				
+				for(var k = 1;k < styles.length;k++)
+				{
+					if(boldRG.test(styles[k]))
+					{
+						var entries = boldRG.exec(styles[k]);
+						if(entries[1] == '1' && bold == false)
+						{
+							reconstructedString += '<b>';
+							bold = true;
+						}
+						else if(entries[1] == '0' && bold == true)
+						{
+							reconstructedString += '</b>';
+							bold = false;
+						}
+					}
+				}
+				
+				reconstructedString += extractText[1];
+				
+				if(bold == true)
+					reconstructedString += '</b>';
+			}
+			
+			var returnValue = new Array(text, '');
+			return returnValue;
 		}
 		
 		/**
