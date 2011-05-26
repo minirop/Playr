@@ -5,6 +5,16 @@
 * Fix issues above
 * Add a Flash fallback
 
+### v0.5.5
+* Added cue timestamps tags support (see notes on WebVTT implementation)
+* Cue tags parser fixes
+
+### v0.5
+* Interface improvements
+* Added buffering bar
+* Added WebVTT text position support
+* Fixed WebVTT text alignment
+
 ### v0.4
 * Added line position (L:xx%) support
 * Code refactoring
