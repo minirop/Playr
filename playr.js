@@ -589,6 +589,17 @@ function Playr(v_id, v_el){
 				
 				for(var k = 1;k < styles.length;k++)
 				{
+					if(styles[k].indexOf('(') != -1)
+					{
+						alert(styles[k]);
+						while(styles[k].indexOf(')') == -1)
+						{
+							k++;
+						}
+						alert(styles[k]);
+						k++; // skip the last one
+					}
+					
 					if(boldRG.test(styles[k]))
 					{
 						var entries = boldRG.exec(styles[k]);
